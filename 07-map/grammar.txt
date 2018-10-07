@@ -1,0 +1,21 @@
+<noun>          cat
+<noun>          dog
+<noun>          table
+<noun>          bird
+<noun>          superman
+<noun>          hippie
+<noun-phrase>   <noun>
+<noun-phrase>   <adjective> <noun-phrase>
+<adjective>     large
+<adjective>     brown
+<adjective>     absurd
+<adjective>     kinky
+<verb>          sings
+<verb>          jumps
+<verb>          sits
+<verb>          craps
+<location>      on the stairs
+<location>      under the sky
+<location>      wherever it wants
+<location>      on the floor
+<sentence>      the <noun-phrase> <verb> <location>

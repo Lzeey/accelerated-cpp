@@ -1,7 +1,7 @@
 IDIR =../include
 CC=g++
 CFLAGS=-I$(IDIR)
-CXXFLAGS=-std=c++11
+CXXFLAGS=-std=c++17
 WARNING=-Werror=return-type # Enforce all functions to have returns
 
 ODIR=obj
@@ -19,10 +19,10 @@ OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 # $@ refers to target name
 # $< refers to first
 $(ODIR)/%.o: %.cc $(DEPS)
-	$(CC) -c -o $@ $< $(CFLAGS) $(WARNING)
+	$(CC) $(CXXFLAGS) -c -o $@ $< $(CFLAGS) $(WARNING)
 
 test_vec: obj/test_vec.o
-	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
+	$(CC) $(CXXFLAGS) -o $@ $^ $(CFLAGS) $(LIBS)
 	./test_vec
 
 

@@ -1,39 +1,15 @@
-#ifndef GUARD_VEC_H
-#define GUARD_VEC_H
+#ifndef GUARD_LIST_H
+#define GUARD_LIST_H
 
 #include <memory>   // For STL allocatator
 #include <algorithm>
 #include <cstddef>
 
-// Vector implementation, similar to that in STL
-// Chapter 11 - Accelerated C++
-/* Basic operations to be supported
-// construct a vector
-vector<Student_info> vs; // empty vector
-vector<double> v(100); // vector with 100 elements
-
-// obtain the names of the types used by the vector
-vector<Student_info>::const_iterator b, e;
-vector<Student_info>::size_type i = 0;
-
-// use size and the index operator to look at each element in the vector
-for (i = 0; i != vs.size(); ++i)
-cout << vs[i].name();
-// return iterators positioned on the first and one past the last element
-b = vs.begin(); e = vs.end();
-
-// Insert elements
-v.push_back(1.0);
-
-TODO:
-Range operator
-erase, clear
-Allocate directly from array of thingys
+/* List implementation. Similar to that in std::list
 */
 
-
 template<class T>
-class Vec {
+class List {
     public:
         typedef T* iterator;
         typedef const T* const_iterator;
@@ -45,13 +21,12 @@ class Vec {
         explicit Vec(size_type n, const T& val = T()) {create(n, val);} //Explicit
 
         Vec(const Vec& v) { create(v.begin(), v.end());} //Initialization (Copy constructor)
-        Vec& operator=(Vec);     //Assignment constructor
+        Vec& operator=(const Vec&);     //Assignment constructor
         ~Vec() {uncreate();}           //Destructors
-
 
         //Interfaces
         size_type size() const {return limit - data;}   //Cast from ptrdiff_t to size_type
-        bool empty() const {return (!data);}
+        bool empty() const {return (data == 0);}
         T& operator[] (size_type i) {return data[i];}
         const T& operator[] (size_type i) const {return data[i];}   //Overloading works as there is a implicit parameter for all member functions (of the object it is operating on). It differs for const and non-const
 
@@ -82,39 +57,24 @@ class Vec {
         void unchecked_append(const T&);    //Append element to Vec without checking
         void uncreate();    //Removes all elements
 
-        void swap(Vec<T>&, Vec<T>&);    //swap interface
-
 };
 
-/* Copies RHS to LHS, using copy-swap idiom */
+/* Copies RHS to LHS */
 template<class T>
-Vec<T>& Vec<T>::operator=(Vec<T> rhs) {
-    swap(*this, rhs);
-    /*
+Vec<T>& Vec<T>::operator=(const Vec<T>& rhs) {
     //Check for self-assignment. Else we cannot run uncreate() safely.
     if (this != &rhs) {
         uncreate();
         //Copy elements
         create(rhs.begin(), rhs.end());
-    }*/
+    }
     return *this;
-}
-
-/* Swap method */
-template<class T>
-void Vec<T>::swap(Vec& v1, Vec& v2) {
-    using std::swap;
-
-    //Swap data pointers
-    swap(v1.data, v2.data);
-    swap(v1.avail, v2.avail);
-    swap(v1.limit, v2.limit);
-}
+};
 
 /* Create assumes unallocated memory */
 template<class T>
 void Vec<T>::create() {
-    data = avail = limit = nullptr;
+    data = avail = limit = 0;
 }
 
 template<class T>
@@ -165,7 +125,7 @@ void Vec<T>::uncreate() {
         alloc.deallocate(data, limit-data);
 
         //Reset pointers to indicate empty
-        data = avail = limit = nullptr;
+        data = avail = limit = 0;
     }
 }
 

@@ -4,6 +4,7 @@
 #include <memory>   // For STL allocatator
 #include <algorithm>
 #include <cstddef>
+#include <iostream>
 
 // Vector implementation, similar to that in STL
 // Chapter 11 - Accelerated C++
@@ -44,14 +45,32 @@ class Vec {
         Vec() {create();};     //Default
         explicit Vec(size_type n, const T& val = T()) {create(n, val);} //Explicit
 
+        friend void swap(Vec<T>&, Vec<T>&);    //swap interface
         Vec(const Vec& v) { create(v.begin(), v.end());} //Initialization (Copy constructor)
         Vec& operator=(Vec);     //Assignment constructor
-        ~Vec() {uncreate();}           //Destructors
+        ~Vec() {uncreate();}     //Destructor
+        Vec(Vec&& v): Vec() {    //Move constructor with forwarding reference
+            swap(*this, v);
+        }
 
+        //Operators
+        // template<class T1>
+        friend std::ostream& operator<<(std::ostream& os, const Vec<T>& v) {
+            for (auto it = v.begin(); it != v.end(); ++it) {
+                os << *it << '\n';
+            }
+            return os;
+        }
+        //friend std::ostream& operator<<(std::ostream&, const Vec<T>&); 
+
+        //For testing
+        friend int& operator+(int& lhs, const Vec<T>& v) {
+            return ++lhs;
+        }
 
         //Interfaces
         size_type size() const {return limit - data;}   //Cast from ptrdiff_t to size_type
-        bool empty() const {return (!data);}
+        bool empty() const {return !data;}
         T& operator[] (size_type i) {return data[i];}
         const T& operator[] (size_type i) const {return data[i];}   //Overloading works as there is a implicit parameter for all member functions (of the object it is operating on). It differs for const and non-const
 
@@ -68,6 +87,9 @@ class Vec {
         }
 
     private:
+        // std::unique_ptr<T> data;
+        // std::unique_ptr<T> avail;
+        // std::unique_ptr<T> limit;
         T* data;    //Ptr to start of data
         T* avail;   //Ptr to one past last data point
         T* limit;    //Ptr to last allocated space
@@ -82,27 +104,18 @@ class Vec {
         void unchecked_append(const T&);    //Append element to Vec without checking
         void uncreate();    //Removes all elements
 
-        void swap(Vec<T>&, Vec<T>&);    //swap interface
-
 };
 
 /* Copies RHS to LHS, using copy-swap idiom */
 template<class T>
 Vec<T>& Vec<T>::operator=(Vec<T> rhs) {
     swap(*this, rhs);
-    /*
-    //Check for self-assignment. Else we cannot run uncreate() safely.
-    if (this != &rhs) {
-        uncreate();
-        //Copy elements
-        create(rhs.begin(), rhs.end());
-    }*/
     return *this;
 }
 
 /* Swap method */
 template<class T>
-void Vec<T>::swap(Vec& v1, Vec& v2) {
+void swap(Vec<T>& v1, Vec<T>& v2) {
     using std::swap;
 
     //Swap data pointers
@@ -168,5 +181,9 @@ void Vec<T>::uncreate() {
         data = avail = limit = nullptr;
     }
 }
+
+// ostream operator - Output each element with a newline.
+// TODO: STILL DOES NOT WORK
+
 
 #endif

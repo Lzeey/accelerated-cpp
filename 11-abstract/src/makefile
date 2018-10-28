@@ -25,7 +25,9 @@ test_vec: obj/test_vec.o
 	$(CC) $(CXXFLAGS) -o $@ $^ $(CFLAGS) $(LIBS)
 	./test_vec
 
-
+test_list: obj/test_list.o
+	$(CC) $(CXXFLAGS) -o $@ $^ $(CFLAGS) $(LIBS)
+	./test_list
 
 .PHONY: clean
 

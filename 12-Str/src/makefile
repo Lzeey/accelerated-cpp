@@ -31,7 +31,7 @@ test_list: obj/test_list.o
 
 test_str: obj/test_str.o
 	$(CC) $(CXXFLAGS) -o $@ $^ $(CFLAGS) $(LIBS)
-	./test_str
+	cat ../test_str_data | ./test_str
 
 .PHONY: clean
 

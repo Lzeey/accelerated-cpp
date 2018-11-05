@@ -5,7 +5,8 @@
 #include <algorithm>
 #include <cstddef>
 #include <iostream>
-
+#include <iterator> // ostream_iterator
+#include <stdexcept> // out_of_range
 // Vector implementation, similar to that in STL
 // Chapter 11 - Accelerated C++
 /* Basic operations to be supported
@@ -44,8 +45,17 @@ class Vec {
         //Constructors
         Vec() {create();};     //Default
         explicit Vec(size_type n, const T& val = T()) {create(n, val);} //Explicit
+        Vec(std::initializer_list<T> list) { create(list.begin(), list.end()); }
+        template<class FwdIt>
+        Vec(FwdIt first, FwdIt last) { create(first, last);}
+        friend void swap(Vec<T>& v1, Vec<T>& v2) { //swap interface
+            using std::swap;
 
-        friend void swap(Vec<T>&, Vec<T>&);    //swap interface
+            //Swap data pointers
+            swap(v1.data, v2.data);
+            swap(v1.avail, v2.avail);
+            swap(v1.limit, v2.limit);
+        };    
         Vec(const Vec& v) { create(v.begin(), v.end());} //Initialization (Copy constructor)
         Vec& operator=(Vec);     //Assignment constructor
         ~Vec() {uncreate();}     //Destructor
@@ -56,12 +66,11 @@ class Vec {
         //Operators
         // template<class T1>
         friend std::ostream& operator<<(std::ostream& os, const Vec<T>& v) {
-            for (auto it = v.begin(); it != v.end(); ++it) {
-                os << *it << '\n';
-            }
+            os << '[';
+            std::copy(v.begin(), v.end(), std::ostream_iterator<T> (os, ", "));
+            os << ']';
             return os;
         }
-        //friend std::ostream& operator<<(std::ostream&, const Vec<T>&); 
 
         //For testing
         friend int& operator+(int& lhs, const Vec<T>& v) {
@@ -70,13 +79,12 @@ class Vec {
 
         //Interfaces
         size_type size() const {return avail - data;}   //Cast from ptrdiff_t to size_type
-        bool empty() const {return !data;}
+        bool empty() const {return (!data || (data == avail));}
         T& operator[] (size_type i) {return data[i];}
         const T& operator[] (size_type i) const {return data[i];}   //Overloading works as there is a implicit parameter for all member functions (of the object it is operating on). It differs for const and non-const
 
         iterator begin() {return data;}
         const_iterator begin() const {return data;}
-
         iterator end() {return avail;}
         const_iterator end() const {return avail;}
 
@@ -85,7 +93,6 @@ class Vec {
                 grow();
             unchecked_append(val);  //Append new element
         }
-
         void pop_back() { //Remove final element
             if (data != avail) {
                 alloc.destroy(--avail);
@@ -94,7 +101,9 @@ class Vec {
                     uncreate();
             }
         }
-
+        iterator erase(const_iterator it); // Removes one element. Does not change capacity
+        iterator erase(const_iterator first, const_iterator last); //Removes elements between [first, last)
+        void clear() {erase(begin(), end());} //Removes all elements
     private:
         // std::unique_ptr<T> data;
         // std::unique_ptr<T> avail;
@@ -113,6 +122,9 @@ class Vec {
         void unchecked_append(const T&);    //Append element to Vec without checking
         void uncreate();    //Removes all elements
 
+        iterator nonconst_cast(const_iterator it) { //Cast iterator to non-const
+            return begin() + (it - begin());
+        }
 };
 
 /* Copies RHS to LHS, using copy-swap idiom */
@@ -120,17 +132,6 @@ template<class T>
 Vec<T>& Vec<T>::operator=(Vec<T> rhs) {
     swap(*this, rhs);
     return *this;
-}
-
-/* Swap method */
-template<class T>
-void swap(Vec<T>& v1, Vec<T>& v2) {
-    using std::swap;
-
-    //Swap data pointers
-    swap(v1.data, v2.data);
-    swap(v1.avail, v2.avail);
-    swap(v1.limit, v2.limit);
 }
 
 /* Create assumes unallocated memory */
@@ -191,8 +192,31 @@ void Vec<T>::uncreate() {
     }
 }
 
-// ostream operator - Output each element with a newline.
-// TODO: STILL DOES NOT WORK
+template<class T>
+typename Vec<T>::iterator Vec<T>::erase(const_iterator it) { //remove [first; last)
+    if (it >= this->end())
+        throw std::out_of_range("Iterator outside of range");
+    //Swap from last onwards
+    iterator dest = nonconst_cast(it);
+    iterator first = dest + 1;
+    while (first != this->end()) {
+        *dest++ = std::move(*first++);
+    }
+    avail--;
+    return dest; //const cast to non-const.
+}
 
-
+template<class T>
+typename Vec<T>::iterator Vec<T>::erase(const_iterator first, const_iterator last) { //remove [first; last)
+    if ((first > this->end()) || (last > this->end()))
+        throw std::out_of_range("Iterator outside of range");
+    //Swap from last onwards
+    iterator dest = nonconst_cast(first);
+    iterator right = nonconst_cast(last);
+    while (right != this->end()) {
+        *dest++ = std::move(*right++);
+    }
+    avail = dest;
+    return nonconst_cast(last); //const cast to non-const.
+}
 #endif

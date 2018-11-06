@@ -74,7 +74,7 @@ class Str {
         bool operator>=(const Str& s) const {
             return (strcmp(this->c_str(), s.c_str()) >= 0);
         }
-        
+
         friend std::ostream& operator<<(std::ostream&, const Str&);
         friend std::istream& operator>>(std::istream&, Str&);
         friend std::istream& getline(std::istream&, Str&);
